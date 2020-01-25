@@ -21,6 +21,48 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- protolude
+- bytestring
+- text
+- containers
+
+default-extensions:
+  - AllowAmbiguousTypes
+  - BlockArguments
+  - DataKinds
+  - DeriveAnyClass
+  - DeriveGeneric
+  - DerivingStrategies
+  - DerivingVia
+  - DuplicateRecordFields
+  - DeriveFunctor
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - LambdaCase
+  - InstanceSigs
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - NamedFieldPuns
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - PolyKinds
+  - PartialTypeSignatures
+  - PatternSynonyms
+  - RankNTypes
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TransformListComp
+  - TypeApplications
+  - TypeFamilies
+  - TypeOperators
+  - TupleSections
+  - TypeSynonymInstances
+  - UndecidableInstances
+  - ViewPatterns
+
 
 library:
   source-dirs: src

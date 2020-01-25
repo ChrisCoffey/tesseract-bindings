@@ -1,6 +1,11 @@
 module Main where
 
-import Lib
+import Protolude
+
+import Tesseract.Bindings
+import Foreign.C.String
 
 main :: IO ()
-main = someFunc
+main = do
+    s <- newCString "Test"
+    putStrLn ("Not implemented" :: Text)
