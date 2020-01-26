@@ -132,16 +132,112 @@ newtype TextlineOrder = TextlineOrder { unTextlineOrder :: Int}
     ,textline_order_top_to_bottom = TEXTLINE_ORDER_TOP_TO_BOTTOM
 }
 
+
+-- | ETEXT_DESC
+-- | Description of the output of the OCR engine.
+-- | This structure is used as both a progress monitor and the final
+-- | output header, since it needs to be a valid progress monitor while
+-- | the OCR engine is storing its output to shared memory.
+-- | During progress, all the buffer info is -1.
+-- | Progress starts at 0 and increases to 100 during OCR. No other constraint.
+-- | Additionally the progress callback contains the bounding box of the word that
+-- | is currently being processed.
+-- | Every progress callback, the OCR engine must set ocr_alive to 1.
+-- | The HP side will set ocr_alive to 0. Repeated failure to reset
+-- | to 1 indicates that the OCR engine is dead.
+-- | If the cancel function is not null then it is called with the number of
+-- | user words found. If it returns true then operation is cancelled.
+
 -----------------------------
 --
 --          Types
 --
 -----------------------------
+data ETextDesc = ETextDesc
+    { count :: CInt
+    , progress :: CInt
+    , moreToCome :: CInt
+    , ocrAlive :: CInt
+    , errCode :: CInt
+    , endTime :: CInt
+    } deriving (Eq, Show)
 
+data Pix
+data Boxa
+data Pixa
+
+data ResultRenderer
 -----------------------------
 --
 --          Functions
 --
 -----------------------------
-foreign import ccall "tesseract/capi.h TessVersion"
-    tesseract_version :: CString
+
+-- Free functions, meaning not associated with a specific tesseract class
+
+-- Returns the loaded tesseract version
+foreign import ccall "capi.h TessVersion"
+    c_tesseract_version :: CString
+
+foreign import ccall "capi.h TessDeleteText"
+    c_delete_text :: CString -> IO ()
+
+foreign import ccall "capi.h TessDeleteTextArray"
+    c_delete_text_array :: Ptr CString -> IO ()
+
+foreign import ccall "capi.h TessDeleteIntArray"
+    c_delete_int_array :: Ptr CInt -> IO ()
+
+
+-- Renderer API
+-- The `ResultRenderer` itself is uninhabited, entirely managed by C
+
+foreign import ccall "capi.h TessTextRendererCreate"
+    c_create_text_renderer :: CString -> IO ResultRenderer
+
+foreign import ccall "capi.h TessHOcrRendererCreate"
+    c_create_hocr_renderer :: CString -> IO ResultRenderer
+
+-- This includes an additional flag for font info
+foreign import ccall "capi.h TessHOcrRendererCreate2"
+    c_create_hocr_renderer_font :: CString -> CBool -> IO ResultRenderer
+
+foreign import ccall "capi.h TessAltRendererCreate"
+    c_create_alto_renderer :: CString -> IO ResultRenderer
+
+foreign import ccall "capi.h TessTsvRendererCreate"
+    c_create_tsv_renderer :: CString -> IO ResultRenderer
+
+foreign import ccall "capi.h TessPDFRendererCreate"
+    c_create_pdf_renderer ::
+           CString
+        -> CString
+        -> CBool
+        -> IO ResultRenderer
+
+foreign import ccall "capi.h TessUnlvRendererCreate"
+    c_create_unlv_renderer :: CString -> IO ResultRenderer
+
+foreign import ccall "capi.h TessBoxTextRendererCreate"
+    c_create_box_text_renderer :: CString -> IO ResultRenderer
+
+foreign import ccall "capi.h TessLSTMBoxRendererCreate"
+    c_create_lstmbox_text_renderer :: CString -> IO ResultRenderer
+
+foreign import ccall "capi.h TessWordStrBoxRendererCreate"
+    c_create_wordstrbox_text_renderer :: CString -> IO ResultRenderer
+
+foreign import ccall "capi.h TessDeleteResultRenderer"
+    c_delete_result_renderer :: ResultRenderer -> IO ()
+
+foreign import ccall "capi.h TessResultRendererInsert"
+    c_insert_result_renderer :: ResultRenderer -> ResultRenderer -> IO ()
+
+TessResultRenderer* TESS_CALL TessResultRendererNext(TessResultRenderer* renderer);
+BOOL TESS_CALL TessResultRendererBeginDocument(TessResultRenderer* renderer, const char* title);
+BOOL TESS_CALL TessResultRendererAddImage(TessResultRenderer* renderer, TessBaseAPI* api);
+BOOL TESS_CALL TessResultRendererEndDocument(TessResultRenderer* renderer);
+
+const char* TESS_CALL TessResultRendererExtention(TessResultRenderer* renderer);
+const char* TESS_CALL TessResultRendererTitle(TessResultRenderer* renderer);
+int TESS_CALL TessResultRendererImageNum(TessResultRenderer* renderer);
