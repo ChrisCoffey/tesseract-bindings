@@ -167,6 +167,7 @@ data Boxa
 data Pixa
 
 data ResultRenderer
+data BaseAPI
 -----------------------------
 --
 --          Functions
@@ -233,11 +234,65 @@ foreign import ccall "capi.h TessDeleteResultRenderer"
 foreign import ccall "capi.h TessResultRendererInsert"
     c_insert_result_renderer :: ResultRenderer -> ResultRenderer -> IO ()
 
-TessResultRenderer* TESS_CALL TessResultRendererNext(TessResultRenderer* renderer);
-BOOL TESS_CALL TessResultRendererBeginDocument(TessResultRenderer* renderer, const char* title);
-BOOL TESS_CALL TessResultRendererAddImage(TessResultRenderer* renderer, TessBaseAPI* api);
-BOOL TESS_CALL TessResultRendererEndDocument(TessResultRenderer* renderer);
+foreign import ccall "capi.h TessResultRendererNext"
+    c_next_result_renderer :: ResultRenderer -> IO ResultRenderer
 
-const char* TESS_CALL TessResultRendererExtention(TessResultRenderer* renderer);
-const char* TESS_CALL TessResultRendererTitle(TessResultRenderer* renderer);
-int TESS_CALL TessResultRendererImageNum(TessResultRenderer* renderer);
+foreign import ccall "capi.h TessResultRendererBeginDocument"
+    c_begin_document_rendering :: ResultRenderer -> CString -> IO CBool
+
+foreign import ccall "capi.h TessResultRendererAddImage"
+    c_add_image_for_rendering :: ResultRenderer -> BaseAPI -> IO CBool
+
+foreign import ccall "capi.h TessResultRendererEndDocument"
+    c_end_document_rendering :: ResultRenderer -> IO CBool
+
+foreign import ccall "capi.h TessResultRendererExtention"
+    c_renderer_extension :: ResultRenderer -> IO CString
+
+foreign import ccall "capi.h TessResultRendererTitle"
+    c_renderer_title :: ResultRenderer -> IO CString
+
+foreign import ccall "capi.h TessResultRendererImageNum"
+    c_renderer_image_num :: ResultRenderer -> IO CInt
+
+-- Base API
+
+foreign import ccall "capi.h TessBaseAPICreate"
+    c_api_create :: IO BaseAPI
+
+foreign import ccall "capi.h TessBaseAPIDelete"
+    c_api_delete :: BaseAPI -> IO ()
+
+foreign import ccall "capi.h TessBaseAPIEnd"
+    c_api_end :: BaseAPI -> IO ()
+
+foreign import ccall "capi.h TessBaseAPIClear"
+    c_api_clear :: BaseAPI -> IO ()
+
+foreign import ccal "capi.h TessBaseAPIInit"
+    c_api_init ::
+        BaseAPI
+        -> CString -- DataPath
+        -> CString -- Language
+        -> OcrEngineMode
+        -> Ptr CString -- Configs
+        -> CInt
+        -> IO CInt
+
+foreign import ccall "capi.h TessBaseAPISetImage"
+    c_api_set_image_raw ::
+        BaseAPI
+        -> Ptr CUChar -- Image bitmap
+        -> CInt  -- bytes per-pixel
+        -> CInt -- pytes per-line
+        -> CInt -- Left
+        -> CInt -- Top
+        -> CInt -- width
+        -> CInt -- Height
+        -> IO ()
+
+foreign import ccall "capi.h TessBaseAPISetImage2"
+    c_api_set_image_pix :: BaseAPI -> Ptr Pix -> IO ()
+
+foreign import ccall "capi.h TessBaseAPIGetUTF8Text"
+    c_api_get_utf8_text :: BaseAPI -> IO CString
